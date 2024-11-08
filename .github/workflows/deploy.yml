@@ -1,19 +1,19 @@
-name: Deploy Vue to GitHub Pages
+name: Build and Deploy to Alibaba Cloud ECS
 
 on:
   push:
     branches:
-      - main # 监听 main 分支的推送
+      - main # 在推送到 main 分支时触发部署
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Check out the code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -22,10 +22,13 @@ jobs:
         run: npm install
 
       - name: Build Vue project
-        run: npm run build # 构建 Vue 项目
+        run: npm run build
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist # 默认 Vue 项目的构建目录
+      - name: Deploy to ECS
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          rsync -avz --delete dist/ root@139.196.154.182:/home/vue-demo
