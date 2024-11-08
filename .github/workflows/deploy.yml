@@ -30,7 +30,9 @@ jobs:
           USERNAME: ${{ secrets.ALIYUN_USERNAME }}
           PASSWORD: ${{ secrets.ALIYUN_PASSWORD }}
           REMOTE_DIR: ${{ secrets.ALIYUN_REMOTE_DIR }}
+          SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_KEY }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y sshpass
-          sshpass -p "$PASSWORD" scp -o StrictHostKeyChecking=no -r dist/* $USERNAME@$HOST:$REMOTE_DIR
+          echo "$SSH_PRIVATE_KEY" > id_rsa
+          chmod 600 id_rsa
+          scp -i id_rsa -o StrictHostKeyChecking=no -r dist/* $USERNAME@$HOST:$REMOTE_DIR
+          rm id_rsa
