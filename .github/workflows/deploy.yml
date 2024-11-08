@@ -29,11 +29,11 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa_vue_demo
-          chmod 600 ~/.ssh/id_rsa_vue_demo
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa_vue_demo  # 使用自定义名称
+          chmod 600 ~/.ssh/id_rsa_vue_demo  # 设置权限
 
-          # 将 ECS 主机添加到 known_hosts 文件以避免 Host key verification 错误
+          # 添加 ECS 主机到 known_hosts
           ssh-keyscan -H 139.196.154.182 >> ~/.ssh/known_hosts
 
-
-          rsync -avz --delete dist/ root@139.196.154.182:/home/vue-demo
+          # 使用 rsync 传输文件到 ECS，指定私钥文件
+          rsync -avz -e "ssh -i ~/.ssh/id_rsa_vue_demo" --delete dist/ root@139.196.154.182:/var/www/html
