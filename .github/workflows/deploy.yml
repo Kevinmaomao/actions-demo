@@ -29,8 +29,8 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa_vue_demo
+          chmod 600 ~/.ssh/id_rsa_vue_demo
 
           # 将 ECS 主机添加到 known_hosts 文件以避免 Host key verification 错误
           ssh-keyscan -H 139.196.154.182 >> ~/.ssh/known_hosts
