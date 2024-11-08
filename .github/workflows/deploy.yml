@@ -31,4 +31,9 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+
+          # 将 ECS 主机添加到 known_hosts 文件以避免 Host key verification 错误
+          ssh-keyscan -H 139.196.154.182 >> ~/.ssh/known_hosts
+
+
           rsync -avz --delete dist/ root@139.196.154.182:/home/vue-demo
