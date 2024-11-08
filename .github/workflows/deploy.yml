@@ -35,5 +35,8 @@ jobs:
           # 添加 ECS 主机到 known_hosts
           ssh-keyscan -H 139.196.154.182 >> ~/.ssh/known_hosts
 
+
+          ssh -i ~/.ssh/id_rsa_vue_demo -o StrictHostKeyChecking=no root@139.196.154.182 echo "SSH connection test successful"
+
           # 使用 rsync 传输文件到 ECS，指定私钥文件
           rsync -avz -e "ssh -i ~/.ssh/id_rsa_vue_demo" --delete dist/ root@139.196.154.182:/var/www/html
