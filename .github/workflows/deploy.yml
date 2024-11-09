@@ -1,36 +1,43 @@
-name: Build and Deploy to Alibaba Cloud ECS
+name: Deploy to Alibaba ECS
 
 on:
   push:
     branches:
-      - main # 在推送到 main 分支时触发部署
+      - main # 选择你的部署分支
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out the code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
         with:
-          node-version: '18'
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Install dependencies
-        run: npm install
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/my-vue-app:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/my-vue-app:latest
 
-      - name: Build Vue project
-        run: npm run build
-
-      - name: Deploy to Aliyun ECS
+      - name: Deploy to Alibaba ECS
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
           USERNAME: ${{ secrets.ALIYUN_USERNAME }}
           PASSWORD: ${{ secrets.ALIYUN_PASSWORD }}
-          REMOTE_DIR: ${{ secrets.ALIYUN_REMOTE_DIR }}
         run: |
           sudo apt-get update
           sudo apt-get install -y sshpass
-          sshpass -p "$PASSWORD" scp -o StrictHostKeyChecking=no -r dist/* $USERNAME@$HOST:$REMOTE_DIR
+          sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << EOF
+            docker pull ${{ secrets.DOCKER_USERNAME }}/my-vue-app:latest
+            docker stop my-vue-app || true
+            docker rm my-vue-app || true
+            docker run -d --name my-vue-app -p 80:80 ${{ secrets.DOCKER_USERNAME }}/my-vue-app:latest
+          EOF
