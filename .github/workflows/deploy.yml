@@ -18,7 +18,7 @@ jobs:
 
       - name: Log in to Alibaba Cloud Registry
         run: |
-          echo "$ALIYUN_SECRET_KEY" | docker login --username="$DOCKER_ALIYUN_ACCESS_KEY" --password-stdin ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}
+          echo "${{ secrets.ALIYUN_SECRET_KEY }}" | docker login --username="${{ secrets.ALIYUN_ACCESS_KEY }}" --password-stdin ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}
 
       - name: Build and push Docker image to ACR
         run: |
@@ -37,7 +37,7 @@ jobs:
           ALIYUN_PASSWORD: ${{ secrets.ALIYUN_PASSWORD }}
         run: |
           sshpass -p "$ALIYUN_PASSWORD" ssh -o StrictHostKeyChecking=no $ALIYUN_USERNAME@$ALIYUN_HOST << EOF
-            echo "$ALIYUN_SECRET_KEY" | docker login --username="$DOCKER_ALIYUN_ACCESS_KEY" --password-stdin ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}
+            echo "${{ secrets.ALIYUN_SECRET_KEY }}" | docker login --username="${{ secrets.ALIYUN_ACCESS_KEY }}" --password-stdin ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}
             docker pull ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}/vue-demo-docker/my-vue-app:latest
             docker stop my-vue-app || true
             docker rm my-vue-app || true
