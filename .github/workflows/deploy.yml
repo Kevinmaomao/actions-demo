@@ -1,9 +1,9 @@
-name: Deploy to Alibaba ECS
+name: Deploy to Alibaba ECS using ACR
 
 on:
   push:
     branches:
-      - main # 选择你的部署分支
+      - main # 部署的分支
 
 jobs:
   build-and-deploy:
@@ -16,28 +16,30 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push Docker image
+      - name: Log in to Alibaba Cloud Registry
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/my-vue-app:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/my-vue-app:latest
+          echo "$ALIYUN_SECRET_KEY" | docker login --username="$DOCKER_ALIYUN_ACCESS_KEY" --password-stdin ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}
 
-      - name: Deploy to Alibaba ECS
-        env:
-          HOST: ${{ secrets.ALIYUN_HOST }}
-          USERNAME: ${{ secrets.ALIYUN_USERNAME }}
-          PASSWORD: ${{ secrets.ALIYUN_PASSWORD }}
+      - name: Build and push Docker image to ACR
+        run: |
+          docker build -t ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}/vue-demo-docker/my-vue-app:latest .
+          docker push ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}/vue-demo-docker/my-vue-app:latest
+
+      - name: Install sshpass
         run: |
           sudo apt-get update
           sudo apt-get install -y sshpass
-          sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << EOF
-            docker pull ${{ secrets.DOCKER_USERNAME }}/my-vue-app:latest
+
+      - name: Deploy to Alibaba ECS
+        env:
+          ALIYUN_USERNAME: ${{ secrets.ALIYUN_USERNAME }}
+          ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
+          ALIYUN_PASSWORD: ${{ secrets.ALIYUN_PASSWORD }}
+        run: |
+          sshpass -p "$ALIYUN_PASSWORD" ssh -o StrictHostKeyChecking=no $ALIYUN_USERNAME@$ALIYUN_HOST << EOF
+            echo "$ALIYUN_SECRET_KEY" | docker login --username="$DOCKER_ALIYUN_ACCESS_KEY" --password-stdin ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}
+            docker pull ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}/vue-demo-docker/my-vue-app:latest
             docker stop my-vue-app || true
             docker rm my-vue-app || true
-            docker run -d --name my-vue-app -p 80:80 ${{ secrets.DOCKER_USERNAME }}/my-vue-app:latest
+            docker run -d --name my-vue-app -p 80:80 ${{ secrets.DOCKER_ALIYUN_REGISTRY_ID }}/vue-demo-docker/my-vue-app:latest
           EOF
