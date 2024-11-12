@@ -40,7 +40,7 @@ jobs:
           ALIYUN_PASSWORD: ${{ secrets.ALIYUN_PASSWORD }}
         run: |
           sshpass -p "$ALIYUN_PASSWORD" ssh -o StrictHostKeyChecking=no $ALIYUN_USERNAME@$ALIYUN_HOST << EOF
-            docker login --username="${{ secrets.DOCKER_USERNAME }}" --password="${{ secrets.DOCKER_ALIYUN_ACCESS_KEY }}" --password-stdin $DOCKER_REGISTRY_URL
+            docker login --username="${{ secrets.DOCKER_USERNAME }}" --password="${{ secrets.DOCKER_ALIYUN_ACCESS_KEY }}" $DOCKER_REGISTRY_URL
             docker pull $DOCKER_REGISTRY_URL/vue-demo-docker/my-vue-app:latest
             docker stop my-vue-app || true
             docker rm my-vue-app || true
